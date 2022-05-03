@@ -1,21 +1,27 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 	"tgin"
 )
 
 func main() {
+
 	engine := tgin.New()
-	engine.GET("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "URL.Path = %q\n", r.URL.Path)
+
+	engine.GET("/", func(ctx *tgin.Context) {
+		ctx.HTML(http.StatusOK, "<h1>Hello Tiny Gin</h1>")
 	})
 
-	engine.GET("/hello", func(w http.ResponseWriter, r *http.Request) {
-		for k, v := range r.Header {
-			fmt.Fprintf(w, "Header[%q] = %q\n", k, v)
-		}
+	engine.GET("/hello", func(ctx *tgin.Context) {
+		ctx.String(http.StatusOK, "Hello %s!, you're at %s\n", ctx.Query("name"), ctx.Path)
+	})
+
+	engine.POST("/login", func(ctx *tgin.Context) {
+		ctx.JSON(http.StatusOK, tgin.H{
+			"username": ctx.PostForm("username"),
+			"password": ctx.PostForm("password"),
+		})
 	})
 
 	engine.Run(":9999")
