@@ -1,6 +1,7 @@
 package tgin
 
 import (
+	"log"
 	"net/http"
 )
 
@@ -15,8 +16,8 @@ func New() *Engine {
 }
 
 func (e *Engine) addRoute(method, pattern string, handler HandlerFunc) {
-	key := method + "-" + pattern
-	e.router.handlers[key] = handler
+	log.Printf("Route %4s - %s", method, pattern)
+	e.router.addRoute(method, pattern, handler)
 }
 
 func (e *Engine) GET(pattern string, handler HandlerFunc) {
