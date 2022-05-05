@@ -17,6 +17,8 @@ type Context struct {
 	Method     string
 	Params     map[string]string
 	StatusCode int
+	handlers   []HandlerFunc
+	index      int
 }
 
 func NewContext(w http.ResponseWriter, req *http.Request) *Context {
@@ -25,6 +27,14 @@ func NewContext(w http.ResponseWriter, req *http.Request) *Context {
 		Req:    req,
 		Path:   req.URL.Path,
 		Method: req.Method,
+		index:  -1,
+	}
+}
+
+func (c *Context) Next() {
+	c.index++
+	for ; c.index < len(c.handlers); c.index++ {
+		c.handlers[c.index](c)
 	}
 }
 
@@ -63,6 +73,11 @@ func (c *Context) JSON(code int, obj interface{}) {
 	if err := encoder.Encode(obj); err != nil {
 		http.Error(c.Writer, err.Error(), 500)
 	}
+}
+
+func (c *Context) Fail(code int, err string) {
+	c.index = len(c.handlers)
+	c.JSON(code, H{"message": err})
 }
 
 func (c *Context) Data(code int, data []byte) {

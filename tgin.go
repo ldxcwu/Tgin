@@ -3,6 +3,7 @@ package tgin
 import (
 	"log"
 	"net/http"
+	"strings"
 )
 
 type HandlerFunc func(*Context)
@@ -52,8 +53,19 @@ func (g *RouterGroup) POST(pattern string, handler HandlerFunc) {
 	g.addRoute("POST", pattern, handler)
 }
 
+func (g *RouterGroup) Use(middlewares ...HandlerFunc) {
+	g.middlewares = append(g.middlewares, middlewares...)
+}
+
 func (e *Engine) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	var middlewares []HandlerFunc
+	for _, group := range e.groups {
+		if strings.HasPrefix(req.URL.Path, group.prefix) {
+			middlewares = append(middlewares, group.middlewares...)
+		}
+	}
 	c := NewContext(w, req)
+	c.handlers = middlewares
 	e.router.handle(c)
 }
 
